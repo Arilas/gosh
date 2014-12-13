@@ -1,0 +1,9 @@
+define(
+  [
+
+  ],
+  ->
+    class Controller
+      dispatch: ->
+
+)
