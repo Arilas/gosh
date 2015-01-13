@@ -8,40 +8,39 @@ define(
         @propagated = yes
       stopPropagation: ->
         @propagated = no
-
-    EventBus =
-      feed: {}
-      subscribe: (event, callback)->
-        unless EventBus.feed[event]
-          EventBus.feed[event] = []
-        index = EventBus.feed[event].push callback
-        ->
-          EventBus.unsubscribe event, index - 1
+    class EventManager
+      constructor: ->
+        @feed = {}
+      subscribe: (event, handler)->
+        @feed[event] = [] unless @feed[event]
+        @feed[event].push handler
+        @
       publish: (event, data)->
-        return unless Array.isArray(EventBus.feed[event])
+        return unless Array.isArray(@feed[event])
         promises = []
-        EventBus.feed[event].forEach (callback)->
+        @feed[event].forEach (callback)->
           if data
             promises.push new Promise (resolve, reject)-> callback data, resolve, reject
           else
             promises.push new Promise callback
 
         Promise.all promises
-      trigger: (event, data = {})->
-        return unless Array.isArray(EventBus.feed[event])
+      trigger: (event, data)->
+        return unless Array.isArray(@feed[event])
         promises = []
         e = new Event event, data
-        EventBus.feed[event].forEach (callback)->
+        @feed[event].forEach (callback)->
           if e.propagated
             promises.push new Promise (resolve, reject)-> callback e, resolve, reject
         Promise.all promises
-      unsubscribe: (event, id)->
-        EventBus.feed[event].splice id, 1
-        EventBus
-      clear: (event)->
-        if event
-          EventBus.feed[event] = []
+      clear: (name)->
+        if name
+          @feed[name] = []
         else
-          EventBus.feed = {}
-        EventBus
+          @feed = {}
+        @
+
+    EventBus = new EventManager()
+    EventBus.EventManager = EventManager
+    EventBus
 )
